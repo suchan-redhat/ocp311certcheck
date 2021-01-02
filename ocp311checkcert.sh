@@ -16,7 +16,7 @@ function show_cert() {
   if [ "$VERBOSE" == "true" ]; then
     openssl crl2pkcs7 -nocrl -certfile /dev/stdin | openssl pkcs7 -print_certs -text | egrep -A9 ^Cert
   else
-    openssl crl2pkcs7 -nocrl -certfile /dev/stdin | openssl pkcs7 -print_certs -text | grep Validity -A2
+    openssl crl2pkcs7 -nocrl -certfile /dev/stdin | openssl pkcs7 -print_certs -text | grep Validity -A2 | tr '\n' ' '
   fi
 }
 
@@ -26,8 +26,9 @@ function show_cert() {
 echo "------------------------- all master nodes TLS certificate -------------------------"
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo find /etc/origin/{master,node} -type f \( -name '*.crt' -o -name '*pem' \)"`; do
-    echo "$node - $f"
-    ssh $node sudo cat $f | show_cert
+    echo -n "#### $node - $f"
+    ssh $node sudo cat $f | show_cert 
+    echo 
   done
 done
 
@@ -37,8 +38,9 @@ done
 echo "------------------------- all master nodes kubeconfig certificate -------------------------"
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo  find /etc/origin/{master,node} -type f -name '*kubeconfig' "`; do
-    echo "$node - $f"
-    ssh $node sudo cat $f |awk '/cert/ {print \$2}' | base64 -d | show_cert
+    echo -n "#### $node - $f # "
+    ssh $node sudo cat $f |awk '/cert/ {print \$2}' | base64 -d | show_cert 
+    echo 
   done
 done
 
@@ -53,8 +55,9 @@ while IFS= read line; do
    if [ $SECRET == "<none>" ]; then
      continue
    fi
-   echo "- secret/$SECRET -n $NAMESPACE"
+   echo -n "####  secret/$SECRET -n $NAMESPACE # "
    oc get secret/$SECRET -n $NAMESPACE --template='{{index .data "tls.crt"}}'  | base64 -d | show_cert
+   echo 
 done
 
 ## Process other custom TLS secrets, router, docker-registry, logging and metrics components
@@ -89,8 +92,9 @@ while IFS= read line; do
   NAMESPACE=${items[0]}
   SECRET=${items[1]}
   FIELD=${items[2]}
-  echo "- secret/$SECRET -n $NAMESPACE, field: $FIELD"
+  echo -n "####   secret/$SECRET -n $NAMESPACE, field: $FIELD #"
   oc get secret/$SECRET -n $NAMESPACE --template="{{index .data \"$FIELD\"}}"  | base64 -d | show_cert
+  echo 
 done
 
 
@@ -100,7 +104,8 @@ done
 echo "------------------------- all nodes' kubelet TLS certificate -------------------------"
 for node in `oc get nodes |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo find /etc/origin/node -type f \( -name '*.crt' -o -name '*pem' \)"`; do
-    echo "$node - $f"
+    echo -n "####  $node - $f  #"
     ssh $node sudo cat $f | show_cert
+    echo 
   done
 done
