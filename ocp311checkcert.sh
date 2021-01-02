@@ -38,7 +38,7 @@ echo "------------------------- all master nodes kubeconfig certificate --------
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo  find /etc/origin/{master,node} -type f -name '*kubeconfig' "`; do
     echo "$node - $f"
-    ssh $node awk '/cert/ {print $2}' $f | base64 -d | show_cert
+    ssh $node sudo cat $f |awk '/cert/ {print \$2}' | base64 -d | show_cert
   done
 done
 
@@ -104,5 +104,3 @@ for node in `oc get nodes |awk 'NR>1'|awk '{print $1}'`; do
     ssh $node sudo cat $f | show_cert
   done
 done
-
-
