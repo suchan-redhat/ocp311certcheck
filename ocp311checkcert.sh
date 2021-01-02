@@ -26,7 +26,7 @@ function show_cert() {
 echo "------------------------- all master nodes TLS certificate -------------------------"
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo find /etc/origin/{master,node} -type f \( -name '*.crt' -o -name '*pem' \)"`; do
-    echo -n "#### $node - $f"
+    echo -n "#### $node - $f # "
     ssh $node sudo cat $f | show_cert 
     echo 
   done
@@ -39,7 +39,7 @@ echo "------------------------- all master nodes kubeconfig certificate --------
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo  find /etc/origin/{master,node} -type f -name '*kubeconfig' "`; do
     echo -n "#### $node - $f # "
-    ssh $node sudo cat $f |awk '/cert/ {print \$2}' | base64 -d | show_cert 
+    ssh $node sudo cat $f |awk '/cert/ {print $2}' | base64 -d | show_cert 
     echo 
   done
 done
