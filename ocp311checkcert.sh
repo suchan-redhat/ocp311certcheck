@@ -20,6 +20,16 @@ function show_cert() {
   fi
 }
 
+## Process API Cert
+
+## Process Wildcard Cert
+
+## Process Registry Cert
+
+
+
+
+
 ## Process all cert files under /etc/origin/node directories --> Each node
 ### The following sections
 ### Script execution machine require password-less SSH access to all nodes
