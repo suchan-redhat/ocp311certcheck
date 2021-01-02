@@ -6,7 +6,7 @@
 ## - This scrpit is designed to run with root user as it reads files under /etc/origin directory
 ## - Do not use `openssl x509 -in` command which can only handle first cert in a given input
 ##
-
+setterm -linewrap off
 VERBOSE=false
 if [ "$1" == "-v" ]; then
     VERBOSE=true
@@ -109,3 +109,5 @@ for node in `oc get nodes |awk 'NR>1'|awk '{print $1}'`; do
     echo 
   done
 done
+
+setterm -linewrap on
