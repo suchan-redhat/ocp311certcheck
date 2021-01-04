@@ -21,8 +21,21 @@ function show_cert() {
 }
 
 ## Process API Cert
+echo "------------------------- API certificate  -------------------------"
+APIURL=$(oc whoami --show-server | awk -F\/ '{print $3}')
+APISERVER=$(echo $APIURL | awk -F\: '{ print $1} ')
+echo -n "#### $API URL # "
+echo | openssl s_client -showcerts -servername $APISERVER  -connect $APIURL |  show_cert
+echo 
 
 ## Process Wildcard Cert
+echo "------------------------- Wildcard certificate -------------------------"
+for URL in $(oc get route -n default -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq ); do
+    echo -n "#### $URL URL # "
+    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 |  show_cert
+    echo 
+done
+
 
 ## Process Registry Cert
 
