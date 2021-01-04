@@ -137,7 +137,7 @@ while IFS= read line; do
   NAMESPACE=${items[0]}
   SECRET=${items[1]}
   FIELD=${items[2]}
-  echo -n "#   secret/$SECRET -n $NAMESPACE, field: $FIELD #"
+  echo -n "#   secret/$SECRET -n $NAMESPACE field: $FIELD #"
   oc get secret/$SECRET -n $NAMESPACE --template="{{index .data \"$FIELD\"}}"  | base64 -d | show_cert
   echo 
 done
