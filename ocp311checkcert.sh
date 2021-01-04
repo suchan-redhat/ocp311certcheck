@@ -30,7 +30,13 @@ echo
 
 ## Process Wildcard Cert
 echo "------------------------- Wildcard certificate -------------------------"
-for URL in $(oc -n default get route docker-registry -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq ); do
+RANDOMPRE=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 8 | head -n 1)
+for URL in $(oc -n default get route docker-registry -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq | sed "s/docker-registry-default/$RANDOMPRE/g" ); do
+    echo -n "# $URL URL # "
+    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 2>/dev/null |  show_cert
+    echo 
+done
+for URL in $(oc -n default get route docker-registry -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq | sed "s/docker-registry-default/$RANDOMPRE/g" |sed 's/ha/hadev/g' |sed 's/server/serverdev/g' ); do
     echo -n "# $URL URL # "
     echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 2>/dev/null |  show_cert
     echo 
