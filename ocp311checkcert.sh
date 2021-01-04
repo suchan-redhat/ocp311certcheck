@@ -25,14 +25,14 @@ echo "------------------------- API certificate  -------------------------"
 APIURL=$(oc whoami --show-server | awk -F\/ '{print $3}')
 APISERVER=$(echo $APIURL | awk -F\: '{ print $1} ')
 echo -n "# $API URL # "
-echo | openssl s_client -showcerts -servername $APISERVER  -connect $APIURL |  show_cert
+echo | openssl s_client -showcerts -servername $APISERVER  -connect $APIURL 2>/dev/null |  show_cert
 echo 
 
 ## Process Wildcard Cert
 echo "------------------------- Wildcard certificate -------------------------"
-for URL in $(oc get route -n default -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq ); do
+for URL in $(oc -n default get route docker-registry -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq ); do
     echo -n "# $URL URL # "
-    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 |  show_cert
+    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 2>/dev/null |  show_cert
     echo 
 done
 
@@ -40,9 +40,9 @@ done
 ## Process Registry Cert
 
 echo "------------------------- Registry (Satellite) certificate -------------------------"
-for URL in $(oc get route -n openshift describe is |grep tagged | awk '{print $3}' | awk -F\/ '{print $1}' |tr -d ' '| sort |uniq ); do
+for URL in $(oc -n openshift describe is |grep tagged | awk '{print $3}' | awk -F\/ '{print $1}' |tr -d ' '| sort |uniq ); do
     echo -n "# $URL URL # "
-    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 |  show_cert
+    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 2>/dev/null  |  show_cert
     echo 
 done
 
