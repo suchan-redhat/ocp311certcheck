@@ -58,7 +58,7 @@ echo "------------------------- LDAPS certificate -------------------------"
 APIPOD=$(oc -n kube-system get pod -l 'openshift.io/component=api' --no-headers| awk '{print $1}'|head -n 1)
 for URL in $(oc -n kube-system rsh $APIPOD cat /etc/origin/master/master-config.yaml|grep ldaps| awk -F\/ '{print $3}' |tr -d ' '| sort |uniq ); do
     echo -n "# $URL URL # "
-    echo | openssl s_client -showcerts -servername $URL  -connect $URL 2>/dev/null |  show_cert
+    echo | openssl s_client -showcerts -servername $URL  -connect $URL:636 2>/dev/null |  show_cert
     echo 
 done
 
