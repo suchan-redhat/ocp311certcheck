@@ -24,7 +24,7 @@ function show_cert() {
 echo "------------------------- API certificate  -------------------------"
 APIURL=$(oc whoami --show-server | awk -F\/ '{print $3}')
 APISERVER=$(echo $APIURL | awk -F\: '{ print $1} ')
-echo -n "# $API URL # "
+echo -n "# $APIURL URL # "
 echo | openssl s_client -showcerts -servername $APISERVER  -connect $APIURL 2>/dev/null |  show_cert
 echo 
 
