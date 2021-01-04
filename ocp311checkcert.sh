@@ -24,14 +24,14 @@ function show_cert() {
 echo "------------------------- API certificate  -------------------------"
 APIURL=$(oc whoami --show-server | awk -F\/ '{print $3}')
 APISERVER=$(echo $APIURL | awk -F\: '{ print $1} ')
-echo -n "#### $API URL # "
+echo -n "# $API URL # "
 echo | openssl s_client -showcerts -servername $APISERVER  -connect $APIURL |  show_cert
 echo 
 
 ## Process Wildcard Cert
 echo "------------------------- Wildcard certificate -------------------------"
 for URL in $(oc get route -n default -o yaml |grep host\: | awk -F\: '{print $2}' |tr -d ' '| sort |uniq ); do
-    echo -n "#### $URL URL # "
+    echo -n "# $URL URL # "
     echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 |  show_cert
     echo 
 done
@@ -49,7 +49,7 @@ done
 echo "------------------------- all master nodes TLS certificate -------------------------"
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo find /etc/origin/{master,node} -type f \( -name '*.crt' -o -name '*pem' \)"`; do
-    echo -n "#### $node - $f # "
+    echo -n "# $node - $f # "
     ssh $node sudo cat $f | show_cert 
     echo 
   done
@@ -61,7 +61,7 @@ done
 echo "------------------------- all master nodes kubeconfig certificate -------------------------"
 for node in `oc get nodes -l 'node-role.kubernetes.io/master=true' |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo  find /etc/origin/{master,node} -type f -name '*kubeconfig' "`; do
-    echo -n "#### $node - $f # "
+    echo -n "# $node - $f # "
     ssh $node sudo cat $f |awk '/cert/ {print $2}' | base64 -d | show_cert 
     echo 
   done
@@ -78,7 +78,7 @@ while IFS= read line; do
    if [ $SECRET == "<none>" ]; then
      continue
    fi
-   echo -n "####  secret/$SECRET -n $NAMESPACE # "
+   echo -n "#  secret/$SECRET -n $NAMESPACE # "
    oc get secret/$SECRET -n $NAMESPACE --template='{{index .data "tls.crt"}}'  | base64 -d | show_cert
    echo 
 done
@@ -115,7 +115,7 @@ while IFS= read line; do
   NAMESPACE=${items[0]}
   SECRET=${items[1]}
   FIELD=${items[2]}
-  echo -n "####   secret/$SECRET -n $NAMESPACE, field: $FIELD #"
+  echo -n "#   secret/$SECRET -n $NAMESPACE, field: $FIELD #"
   oc get secret/$SECRET -n $NAMESPACE --template="{{index .data \"$FIELD\"}}"  | base64 -d | show_cert
   echo 
 done
@@ -127,7 +127,7 @@ done
 echo "------------------------- all nodes' kubelet TLS certificate -------------------------"
 for node in `oc get nodes |awk 'NR>1'|awk '{print $1}'`; do
   for f in `ssh $node "sudo find /etc/origin/node -type f \( -name '*.crt' -o -name '*pem' \)"`; do
-    echo -n "####  $node - $f  #"
+    echo -n "#  $node - $f  #"
     ssh $node sudo cat $f | show_cert
     echo 
   done
