@@ -6,7 +6,7 @@
 ## - This scrpit is designed to run with root user as it reads files under /etc/origin directory
 ## - Do not use `openssl x509 -in` command which can only handle first cert in a given input
 ##
-setterm -linewrap off
+
 VERBOSE=false
 if [ "$1" == "-v" ]; then
     VERBOSE=true
@@ -39,6 +39,12 @@ done
 
 ## Process Registry Cert
 
+echo "------------------------- Registry (Satellite) certificate -------------------------"
+for URL in $(oc get route -n openshift describe is |grep tagged | awk '{print $3}' | awk -F\/ '{print $1}' |tr -d ' '| sort |uniq ); do
+    echo -n "# $URL URL # "
+    echo | openssl s_client -showcerts -servername $URL  -connect $URL:443 |  show_cert
+    echo 
+done
 
 
 
@@ -133,4 +139,3 @@ for node in `oc get nodes |awk 'NR>1'|awk '{print $1}'`; do
   done
 done
 
-setterm -linewrap on
