@@ -20,6 +20,7 @@ function show_cert() {
   fi
 }
 
+function getallcert() {
 ## Process API Cert
 echo "------------------------- API certificate  -------------------------"
 APIURL=$(oc whoami --show-server | awk -F\/ '{print $3}')
@@ -137,7 +138,7 @@ while IFS= read line; do
   NAMESPACE=${items[0]}
   SECRET=${items[1]}
   FIELD=${items[2]}
-  echo -n "#   secret/$SECRET -n $NAMESPACE field: $FIELD #"
+  echo -n "#   secret/$SECRET -n $NAMESPACE, field: $FIELD #"
   oc get secret/$SECRET -n $NAMESPACE --template="{{index .data \"$FIELD\"}}"  | base64 -d | show_cert
   echo 
 done
@@ -154,4 +155,49 @@ for node in `oc get nodes |awk 'NR>1'|awk '{print $1}'`; do
     echo 
   done
 done
+}
 
+function toCSV() {
+     grep Validity  |awk -F\# '{print $2","$3}' | sed 's/\ *Validity\ *//g' |sed 's/Not/\,Not/g' |sed 's/\ *\,/\,/g' | sed 's/Not//g' |sed 's/^\ *//g'  | sed 's/\-\-//g' | sed 's/\,\,/\,/g'
+}
+
+function checkValid() {
+     sed 's/Before//g' | sed 's/After//g' | sed 's/\ \:\ //g' | sed 's/\,\ field\:/\ filed/g' | awk -v nowdate=$(date +%s) -v alerttime=7776000 -F\, '
+{ 
+invalid=0
+for (i=1; i<=NF; i++) {
+   if (i > 1) {
+     command="date +%s --date=\""$i"\""
+     command | getline var
+     close(command)
+     printf $i 
+     if (i %2 == 1) {
+       if ( nowdate + alerttime > var) {
+          invalid=1
+          #printf "nowdate + alerttime > var"  $i " expire " (nowdate + alerttime) "  " var
+       } 
+     } else {
+       if ( nowdate < var) {
+          invalid=1
+          #printf " nowdate < var " $i " expire " nowdate "  " var
+       } 
+     }
+   } else {
+       printf $i
+   }
+   if (i < NF ) {
+       printf ","
+   } else {
+       if (invalid == 1) {
+          printf ",EXPIRED\n"
+       } else {
+          printf ",OK\n"
+       }
+   }
+}
+}
+'
+
+}
+
+getallcert | toCSV | checkValid
